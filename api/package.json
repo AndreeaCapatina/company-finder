@@ -1,0 +1,24 @@
+{
+  "name": "company-finder",
+  "version": "1.0.0",
+  "description": "API for querying company data",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix",
+    "clean": "rm -rf package-lock.json"
+  },
+  "author": "Andreea Capatina",
+  "license": "MIT",
+  "dependencies": {
+    "@elastic/elasticsearch": "^8.17.1",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.21.0"
+  }
+}
