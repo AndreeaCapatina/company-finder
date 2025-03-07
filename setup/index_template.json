@@ -1,0 +1,42 @@
+{
+    "index_patterns": [
+        "company*"
+    ],
+    "template": {
+        "mappings": {
+            "properties": {
+                "name": {
+                    "type": "text"
+                },
+                "phoneNumber": {
+                    "type": "keyword"
+                },
+                "address": {
+                    "type": "text"
+                },
+                "city": {
+                    "type": "keyword"
+                },
+                "socialMedia": {
+                    "properties": {
+                        "facebook": {
+                            "type": "keyword"
+                        },
+                        "twitter": {
+                            "type": "keyword"
+                        },
+                        "linkedin": {
+                            "type": "keyword"
+                        }
+                    }
+                },
+                "website": {
+                    "type": "keyword"
+                }
+            }
+        }
+    },
+    "composed_of": [
+        "common_settings"
+    ]
+}
