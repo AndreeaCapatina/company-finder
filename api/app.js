@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 
 import { companyRoutes } from './routes/companyRoutes.js';
 
-// Load environment variables from .env file
-dotenv.config();
+// Load environment variables from .env file from root level
+dotenv.config({ path: '../.env' });
 
 const app = Fastify({
     logger: true
