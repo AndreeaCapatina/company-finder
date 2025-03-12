@@ -1,0 +1,23 @@
+{
+    "name": "kafka-consumer",
+    "version": "1.0.0",
+    "description": "Kafka consumer for merging data with CSV and inserting into Elasticsearch",
+    "type": "module",
+    "main": "src/consumer.js",
+    "scripts": {
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix",
+        "start": "node src/consumer.js"
+    },
+    "dependencies": {
+        "@elastic/elasticsearch": "^8.17.1",
+        "csv-parser": "^3.2.0",
+        "dotenv": "^16.4.7",
+        "kafkajs": "^2.2.4"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.22.0",
+        "eslint": "^9.22.0",
+        "globals": "^16.0.0"
+    }
+}
