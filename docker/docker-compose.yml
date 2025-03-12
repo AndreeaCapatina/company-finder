@@ -1,32 +1,59 @@
-version: "3.7"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false  # Disables security, which includes HTTPS
+      - xpack.security.enabled=false # Disables security, which includes HTTPS
     ports:
-      - "9200:9200"  # Expose HTTP port
-      - "9300:9300"  # Expose internal communication port (for clustering, not needed for single-node)
+      - "9200:9200" # Expose HTTP port
+      - "9300:9300" # Expose internal communication port (for clustering, not needed for single-node)
     volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data  # Persist Elasticsearch data
+      - elasticsearch-data:/usr/share/elasticsearch/data # Persist Elasticsearch data
     networks:
-      - elastic
+      - mynetwork
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.6.0
     container_name: kibana
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200  # Make Kibana connect to Elasticsearch over HTTP
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200 # Make Kibana connect to Elasticsearch over HTTP
     ports:
-      - "5601:5601"  # Expose Kibana web interface
+      - "5601:5601" # Expose Kibana web interface
     networks:
-      - elastic
+      - mynetwork
+
+  # Zookeeper service (required for Kafka)
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+      - "2181:2181" # Expose the Zookeeper port
+    networks:
+      - mynetwork
+
+  # Kafka service
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 # External address used by clients
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 # Internal address for Docker communication
+      - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 # Zookeeper service connection
+    ports:
+      - "9092:9092" # Expose the Kafka port
+    depends_on:
+      - zookeeper
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
 
 volumes:
   elasticsearch-data:
-
-networks:
-  elastic:
-    driver: bridge

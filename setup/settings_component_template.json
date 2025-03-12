@@ -2,7 +2,58 @@
     "template": {
         "settings": {
             "number_of_shards": 1,
-            "number_of_replicas": 0
+            "number_of_replicas": 0,
+            "index": {
+                "max_ngram_diff": 17
+            },
+            "analysis": {
+                "analyzer": {
+                    "phone_number": {
+                        "char_filter": [
+                            "digits_only"
+                        ],
+                        "tokenizer": "keyword",
+                        "filter": [
+                            "lowercase"
+                        ]
+                    },
+                    "phone_number_search": {
+                        "char_filter": [
+                            "digits_only"
+                        ],
+                        "tokenizer": "keyword",
+                        "filter": [
+                            "lowercase"
+                        ]
+                    },
+                    "phone_number_ngram": {
+                        "char_filter": [
+                            "digits_only"
+                        ],
+                        "tokenizer": "ngram_tokenizer",
+                        "filter": [
+                            "lowercase"
+                        ]
+                    }
+                },
+                "char_filter": {
+                    "digits_only": {
+                        "type": "pattern_replace",
+                        "pattern": "\\D",
+                        "replacement": ""
+                    }
+                },
+                "tokenizer": {
+                    "ngram_tokenizer": {
+                        "type": "ngram",
+                        "min_gram": 3,
+                        "max_gram": 20
+                    }
+                }
+            }
+        },
+        "mappings": {
+            "dynamic": "strict"
         }
     }
 }

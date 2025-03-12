@@ -2,11 +2,13 @@ import { Client } from "@elastic/elasticsearch";
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: '../../.env' });
 
 const client = new Client({
-    nodes: [process.env.ELASTICSEARCH_URL || 'http://localhost:9200']
+    nodes: [process.env.ES_HOST || 'http://localhost:9200']
 });
+
+const companyIndex = process.env.ES_COMPANY_INDEX;
 
 /**
  * 
@@ -20,7 +22,20 @@ async function findCompany(filters) {
 
     for (const [field, value] of Object.entries(filters)) {
         if (value) {
-            query.bool.must.push({ match: { [field]: value } });
+            if (field === 'name') {
+                const boolShould = {
+                    bool: {
+                        should: [
+                            { match: { commercialName: value } },
+                            { match: { legalName: value } },
+                            { match: { availableNames: value } }
+                        ]
+                    }
+                };
+                query.bool.must.push(boolShould);
+            } else {
+                query.bool.must.push({ match: { [field]: value } });
+            }
         }
     }
 
@@ -30,7 +45,7 @@ async function findCompany(filters) {
 
     try {
         const result = await client.search({
-            index: 'company',
+            index: companyIndex,
             body: { query }
         });
 

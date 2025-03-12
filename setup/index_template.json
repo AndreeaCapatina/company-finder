@@ -5,33 +5,41 @@
     "template": {
         "mappings": {
             "properties": {
-                "name": {
+                "comercialName": {
+                    "type": "text"
+                },
+                "legalName": {
+                    "type": "text"
+                },
+                "availableNames": {
                     "type": "text"
                 },
                 "phoneNumber": {
-                    "type": "keyword"
+                    "type": "text",
+                    "analyzer": "phone_number",
+                    "search_analyzer": "phone_number_search",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword"
+                        },
+                        "contains": {
+                            "type": "text",
+                            "analyzer": "phone_number_ngram",
+                            "search_analyzer": "phone_number_search"
+                        }
+                    }
                 },
                 "address": {
                     "type": "text"
                 },
-                "city": {
+                "facebook": {
                     "type": "keyword"
-                },
-                "socialMedia": {
-                    "properties": {
-                        "facebook": {
-                            "type": "keyword"
-                        },
-                        "twitter": {
-                            "type": "keyword"
-                        },
-                        "linkedin": {
-                            "type": "keyword"
-                        }
-                    }
                 },
                 "website": {
                     "type": "keyword"
+                },
+                "timestamp": {
+                    "type": "date"
                 }
             }
         }

@@ -47,7 +47,7 @@ function buildFilters(query) {
     }
 
     if (facebookURI) {
-        filters.socialMedia.facebook = facebookURI;
+        filters.facebook = facebookURI;
     }
 
     return filters;
