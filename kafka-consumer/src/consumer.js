@@ -12,7 +12,6 @@ dotenv.config({ path: '../.env' });
 
 // Kafka configuration from .env file
 const kafkaBroker = process.env.KAFKA_BROKER;
-console.log('Kafka Broker:', kafkaBroker);
 const kafkaTopic = process.env.KAFKA_TOPIC;
 const kafkaGroupId = process.env.KAFKA_GROUP_ID;
 

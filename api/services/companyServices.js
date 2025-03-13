@@ -2,7 +2,7 @@ import { Client } from "@elastic/elasticsearch";
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config({ path: '../../.env' });
+dotenv.config();
 
 const client = new Client({
     nodes: [process.env.ES_HOST || 'http://localhost:9200']
