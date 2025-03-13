@@ -4,11 +4,11 @@ import fs from 'fs';
 
 import { Kafka } from 'kafkajs';
 import { Client } from '@elastic/elasticsearch';
-import { readCSV } from './csvReader.js'; // Import the CSV reader function
+import { readCSV } from './csvReader.js';
 import { generateIdFromDomain } from './idGenerator.js';
 
-// Load environment variables from the .env file at the root level
-dotenv.config({ path: '../.env' });
+// Load environment variables from the .env file
+dotenv.config();
 
 // Kafka configuration from .env file
 const kafkaBroker = process.env.KAFKA_BROKER;
@@ -139,7 +139,6 @@ async function mergeWithExistingData(docId, newData) {
         console.log(`Document for ${docId} updated in Elasticsearch.`);
     } catch (error) {
         if (!error.meta.body.found) {
-            // Document doesn't exist, create it
             try {
                 await esClient.index({
                     index: esIndex,
