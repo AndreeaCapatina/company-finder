@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from the .env file at the root level
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../../', '.env'))
+load_dotenv()
 
 # Scrapy settings for contact_scraper project
 #
@@ -97,15 +97,15 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': None,
 }
 
-# Kafka and Config File settings (optional, can be overridden in pipeline from config.json)
-KAFKA_BROKER = os.getenv('KAFKA_BROKER')
-KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'company-data')
-KAFKA_CLIENT_ID = 'contact-scraper-producer'
-
 # Enable Kafka pipeline
 ITEM_PIPELINES = {
     'contact_scraper.pipelines.KafkaPipeline': 1, # Enable Kafka pipeline
 }
+
+# Kafka and Config File settings (optional, can be overridden in pipeline from config.json)
+KAFKA_BROKER = os.getenv('KAFKA_BROKER')
+KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'company-data')
+KAFKA_CLIENT_ID = 'contact-scraper-producer'
 
 CSV_DIR_PATH = os.getenv('CSV_DIR_PATH')
 CSV_DOMAIN_FILENAME = os.getenv('CSV_DOMAIN_FILENAME')

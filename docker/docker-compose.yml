@@ -1,17 +1,37 @@
 services:
+
+  # API Service
+  company-api:
+    build:
+      context: ../api # Path to your API Dockerfile
+    ports:
+      - "${COMPANY_API_PORT}:${COMPANY_API_PORT}" # Expose the port, using the environment variable
+    env_file:
+      - .env # Load environment variables from the .env file
+    networks:
+      - company_microservices_network # Use a shared network for communication
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false # Disables security, which includes HTTPS
+      - xpack.security.enabled=false # Disables security, which includes HTTPS      - SCRIPTS_DIR=/usr/src/app/scripts   # Define the environment variable
+
     ports:
       - "9200:9200" # Expose HTTP port
       - "9300:9300" # Expose internal communication port (for clustering, not needed for single-node)
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s" ]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
     volumes:
+      - ./scripts:/usr/src/app/scripts # Make sure your setup script is available in the container
       - elasticsearch-data:/usr/share/elasticsearch/data # Persist Elasticsearch data
     networks:
-      - mynetwork
+      - company_microservices_network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.6.0
@@ -21,7 +41,7 @@ services:
     ports:
       - "5601:5601" # Expose Kibana web interface
     networks:
-      - mynetwork
+      - company_microservices_network
 
   # Zookeeper service (required for Kafka)
   zookeeper:
@@ -33,14 +53,14 @@ services:
     ports:
       - "2181:2181" # Expose the Zookeeper port
     networks:
-      - mynetwork
+      - company_microservices_network
 
   # Kafka service
   kafka:
     image: wurstmeister/kafka:latest
     container_name: kafka
     environment:
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 # External address used by clients
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092 # External address used by clients
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 # Internal address for Docker communication
       - KAFKA_LISTENER_SECURITY_PROTOCOL=PLAINTEXT
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 # Zookeeper service connection
@@ -49,11 +69,47 @@ services:
     depends_on:
       - zookeeper
     networks:
-      - mynetwork
+      - company_microservices_network
+
+  # Kafka Consumer Service (defined in kafka-consumer directory)
+  kafka-consumer:
+    build:
+      context: ../kafka-consumer
+    env_file:
+      - .env # Make sure this points to your .env file
+    environment:
+      - CSV_DIR_PATH=/usr/src/app/data
+    depends_on:
+      - kafka
+      - elasticsearch
+    command: [ "npm", "start" ]
+    volumes:
+      - ${CSV_DIR_PATH}:/usr/src/app/data
+    # scale: 2
+    networks:
+      - company_microservices_network # Use a shared network for communication
+
+  contact_scraper:
+    build:
+      context: ../scraper/contact_scraper
+    container_name: contact_scraper
+    env_file:
+      - .env # This file should contain the required env variables
+    environment:
+      - CSV_DIR_PATH=/usr/src/app/data
+    depends_on:
+      - kafka
+      - zookeeper
+    command: [ "scrapy", "crawl", "contacts" ]
+    volumes:
+      - ${CSV_DIR_PATH}:/usr/src/app/data
+    networks:
+      - company_microservices_network
 
 networks:
-  mynetwork:
+  company_microservices_network:
     driver: bridge
+    name: company_microservices_network
 
 volumes:
   elasticsearch-data:

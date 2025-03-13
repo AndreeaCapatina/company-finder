@@ -54,7 +54,7 @@ class ContactSpider(scrapy.Spider):
             return
 
         for index, row in companies_df.iterrows():
-            url = f'https://{row['domain']}'
+            url = f'https://{row["domain"]}'
             yield scrapy.Request(url, self.parse_main_page, cb_kwargs=dict(domain=row['domain']))
 
     def parse_main_page(self, response, domain):

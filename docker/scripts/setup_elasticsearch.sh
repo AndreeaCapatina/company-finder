@@ -9,10 +9,10 @@ TEMPLATE_NAME="company"
 COMPONENT_TEMPLATE_NAME="common_settings"
 
 # Path to the index template JSON file
-TEMPLATE_FILE="${TEMPLATE_FILE:-./index_template.json}"
+TEMPLATE_FILE="${TEMPLATE_FILE:-${SCRIPTS_DIR}/index_template.json}"
 
 # Path to the component template JSON file (settings)
-COMPONENT_TEMPLATE_FILE="${COMPONENT_TEMPLATE_FILE:-./settings_component_template.json}"
+COMPONENT_TEMPLATE_FILE="${COMPONENT_TEMPLATE_FILE:-${SCRIPTS_DIR}/settings_component_template.json}"
 
 # Function to check if Elasticsearch is accessible
 check_elasticsearch() {
