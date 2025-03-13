@@ -1,3 +1,7 @@
 .vscode
-
 node_modules
+__pycache__
+csv_data
+.env
+*.csv
+*.log
