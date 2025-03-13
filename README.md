@@ -13,7 +13,7 @@ The data is scraped from a list of domains and merged with additional company in
 ## Services
 
 ### Contact Scraper
-The Contact Scraper service is built using Scrapy, a Python framework for web scraping. It scrapes company data from a list of domains read from a CSV file, which will be set as an environment variable. The CSV file must have at least one column named "domain".
+The Contact Scraper service is built using Scrapy, a Python framework for web scraping. It scrapes company data from a list of domains read from a CSV file, which is specified by the environment variable `CSV_DOMAIN_FILENAME`. The CSV file must have at least one column named "domain".
 
 The scraper searches for address, phone number, and Facebook links on the first page. If the details are not obtained, it will continue to search on the "Contact" and "About us" pages.
 
@@ -84,6 +84,14 @@ GET /api/company?name=ExampleCompany
 
 ## Setup and Configuration
 
+### Prerequisites
+Ensure you have the following installed:
+- Docker
+- Docker Compose
+- Node.js
+- npm
+- Python
+
 ### Installation
 To install the project, follow these steps:
 
@@ -128,3 +136,6 @@ docker-compose build
 ```bash
 docker-compose up
 ```
+
+## License
+This project is licensed under the MIT License.
