@@ -98,8 +98,7 @@ cd company-finder
 Some environment variables need to be set up before running the services. These include configurations for Kafka, Elasticsearch, and file paths for scraping data. They can be defined in the .env file.
 
 Here’s an example .env file:
-env
-`
+
 ```env
 # Kafka settings
 KAFKA_BROKER=kafka:9092
@@ -117,7 +116,6 @@ CSV_DOMAIN_FILENAME=domains.csv
 CSV_COMPANY_FILENAME=websites-company-names.csv
 ```
 Make sure the .env file is placed in the /docker directory.
-`
 
 ### Running the Services
 
