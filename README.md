@@ -88,9 +88,6 @@ GET /api/company?name=ExampleCompany
 Ensure you have the following installed:
 - Docker
 - Docker Compose
-- Node.js
-- npm
-- Python
 
 ### Installation
 To install the project, follow these steps:
@@ -103,11 +100,19 @@ cd company-finder
 ```
 
 ### Environment Variables
-Some environment variables need to be set up before running the services. These include configurations for Kafka, Elasticsearch, and file paths for scraping data. They can be defined in the .env file.
+Some environment variables need to be set up before running the services. These include configurations for Kafka, Elasticsearch, and file paths for scraping data. They can be defined in the .env file. Make sure the .env file is placed in the /docker directory.
+
+```bash
+cd docker
+touch .env
+```
 
 Here’s an example .env file:
 
 ```env
+# Company API port
+COMPANY_API_PORT=3001
+
 # Kafka settings
 KAFKA_BROKER=kafka:9092
 KAFKA_TOPIC=company-data
@@ -123,18 +128,23 @@ CSV_DIR_PATH=/usr/src/app/data
 CSV_DOMAIN_FILENAME=domains.csv
 CSV_COMPANY_FILENAME=websites-company-names.csv
 ```
-Make sure the .env file is placed in the /docker directory.
 
 ### Running the Services
 
-1. Build all the services defined in docker-compose.yml:
+1. Build all the services defined in docker/docker-compose.yml:
 ```bash
 docker-compose build
 ```
 
-2. Start all services defined in the docker-compose.yml:
+2. Start all services defined in the docker/docker-compose.yml:
 ```bash
 docker-compose up
+```
+
+3. The Company API will be available at:
+**Request:**
+```
+GET <yourIP>:<company_api_port>/api/company?name=ExampleCompany
 ```
 
 ## License
