@@ -82,10 +82,10 @@ services:
     networks:
       - company_microservices_network # Use a shared network for communication
 
-  contact_scraper:
+  contact-scraper:
     build:
       context: ../scraper/contact_scraper
-    container_name: contact_scraper
+    container_name: contact-scraper
     env_file:
       - .env # This file should contain the required env variables
     environment:

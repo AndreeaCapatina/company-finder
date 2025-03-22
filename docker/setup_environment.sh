@@ -26,7 +26,7 @@ for i in $(seq 1 $MAX_RETRIES); do
 done
 
 # Run Elasticsearch setup script
-echo "⚙️ Running Elasticsearch setup..."
+echo "⚙️  Running Elasticsearch setup..."
 echo "y" | bash scripts/setup_elasticsearch.sh
 if [ $? -ne 0 ]; then
     echo "❌ Elasticsearch setup failed. Stopping setup."
@@ -34,7 +34,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Start remaining services after successful Elasticsearch setup
-echo "🚀 Starting remaining services (contact_scraper, kafka-consumer, company-api)..."
-docker-compose up -d contact_scraper kafka-consumer company-api
+echo "🚀 Starting remaining services (contact-scraper, kafka-consumer, company-api)..."
+docker-compose up -d contact-scraper kafka-consumer company-api
 
 echo "✅ Setup completed!"

@@ -100,7 +100,7 @@ cd company-finder
 ```
 
 ### Environment Variables
-Some environment variables need to be set up before running the services. These include configurations for Kafka, Elasticsearch, and file paths for scraping data. They can be defined in the .env file. Make sure the .env file is placed in the /docker directory.
+Some environment variables need to be set up before running the services. These include configurations for Kafka, Elasticsearch, and file paths for scraping data. They should be defined in a .env file inside the /docker directory.
 
 ```bash
 cd docker
@@ -136,10 +136,16 @@ CSV_COMPANY_FILENAME=websites-company-names.csv
 docker-compose build
 ```
 
-2. Start all services defined in the docker/docker-compose.yml:
+2. Run the setup script to start services in the correct order:
 ```bash
-docker-compose up
+sh setup_environment.sh
 ```
+
+This script will:
+✅ Start core services (Elasticsearch, Kibana, Kafka, and Zookeeper).
+✅ Wait for Elasticsearch to be ready.
+✅ Run the scripts/setup_elasticsearch.sh script to configure indices.
+✅ Start the remaining services (contact-scraper, kafka-consumer, company-api).
 
 3. The Company API will be available at:
 **Request:**
