@@ -2,13 +2,10 @@ import fs from 'fs';
 import csv from 'csv-parser';
 
 /**
- * Reads a CSV file and extracts company details into an object.
- *
- * @param {string} csvFilePath - The path to the CSV file to be read.
- * @returns {Promise<Object>} A promise that resolves to an object where each key is a domain and the value is an object containing company details.
- * @property {string} commercialName - The commercial name of the company.
- * @property {string} legalName - The legal name of the company.
- * @property {string[]} availableNames - An array of all available names for the company.
+ * Reads a CSV file and extracts company details into an object with the following fields:
+ * - commercialName
+ * - legalName
+ * - availableNames - An array of all available names for the company.
  */
 export function readCSV(csvFilePath) {
     return new Promise((resolve, reject) => {
@@ -17,13 +14,16 @@ export function readCSV(csvFilePath) {
         fs.createReadStream(csvFilePath)
             .pipe(csv())
             .on('data', (row) => {
+                if (!row.domain) {
+                    console.warn(`Skipping row with missing domain: ${row}`);
+                    return; 
+                }
 
-                // Split the company_all_available_names by the '|' character and store it as an array
+                // Split the company_all_available_names by the '|'
                 const companyAllAvailableNames = row.company_all_available_names
-                    ? row.company_all_available_names.split('|').map(name => name.trim()) // Split by '|' and trim any leading/trailing spaces
-                    : [];
+                ? row.company_all_available_names.split('|').map(name => name.trim()).filter(name => name.length > 0)
+                : [];
 
-                // Assuming 'domain' is a column in the CSV
                 companyDetails[row.domain] = {
                     commercialName: row.company_commercial_name,
                     legalName: row.company_legal_name,

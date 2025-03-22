@@ -1,65 +1,35 @@
-import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 
-import { Kafka } from 'kafkajs';
-import { Client } from '@elastic/elasticsearch';
+import { config } from './config/env.js';
+import { consumer } from './config/kafka.js';
+import { esClient } from './config/elasticsearch.js';
 import { readCSV } from './csvReader.js';
 import { generateIdFromDomain } from './idGenerator.js';
 
-// Load environment variables from the .env file
-dotenv.config();
-
-// Kafka configuration from .env file
-const kafkaBroker = process.env.KAFKA_BROKER;
-const kafkaTopic = process.env.KAFKA_TOPIC;
-const kafkaGroupId = process.env.KAFKA_GROUP_ID;
-
-// Elasticsearch configuration from .env file
-const esHost = process.env.ES_HOST;
-const esIndex = process.env.ES_COMPANY_INDEX;
-
-// CSV file path from .env file
-const csvDirPath = process.env.CSV_DIR_PATH;
-const csvCompanyNamesFile = process.env.CSV_COMPANY_FILENAME;
-
-// Kafka consumer setup
-const kafka = new Kafka({
-    brokers: [kafkaBroker]
-});
-const consumer = kafka.consumer({ groupId: kafkaGroupId });
-
-// Elasticsearch client setup
-const esClient = new Client({ node: esHost });
-
-// This will hold the cached CSV data
-let csvData = {};
-
-// Load CSV data before starting the consumer
 async function loadData() {
-    if (!csvDirPath) {
+    const { dirPath, companyFilename } = config.csv;
+
+    if (!dirPath) {
         console.error('CSV directory path not provided');
         process.exit(1);
     }
 
-    if (!csvCompanyNamesFile) {
+    if (!companyFilename) {
         console.error('CSV file name not provided');
         process.exit(1);
     }
+    const companyNamesFilePath = path.resolve(dirPath, companyFilename);
 
-    // Construct full paths to CSV file
-    const companyNamesFilePath = path.resolve(csvDirPath, csvCompanyNamesFile);
-    console.log('Loading CSV data from:', companyNamesFilePath);
     if (!fs.existsSync(companyNamesFilePath)) {
-        console.error('CSV file not found:', companyNamesFilePath);
+        console.error(`CSV file not found: ${companyNamesFilePath}`);
         process.exit(1);
     }
 
     try {
-        csvData = await readCSV(companyNamesFilePath); // Pass the path to the loadCSV function
-        console.log('CSV Data Loaded');
+        return await readCSV(companyNamesFilePath);
     } catch (error) {
-        console.error('Error loading CSV data', error);
+        console.error('Error loading CSV data:', error);
         process.exit(1); // Exit the process if loading CSV fails
     }
 }
@@ -68,108 +38,94 @@ async function loadData() {
  * Processes a Kafka message by parsing its content, merging it with data from a CSV file,
  * and saving the result to Elasticsearch.
  *
- * @param {Object} message - The Kafka message object.
- * @param {Buffer} message.value - The value of the Kafka message, expected to be a JSON string.
- * @returns {Promise<void>} - A promise that resolves when the data has been successfully saved to Elasticsearch.
- * @throws {Error} - Throws an error if the message cannot be parsed, the CSV file cannot be read, or the data cannot be saved to Elasticsearch.
  */
-async function processMessage(message) {
-    const data = JSON.parse(message.value.toString());
-    const domain = data.domain;
+async function processMessage(message, csvData) {
+    let msgData;
+    try {
+        msgData = JSON.parse(message.value.toString());
+    } catch (error) {
+        console.error(`Error parsing Kafka message: ${error.message}`);
+        return;
+    }
 
-    const csvDetails = csvData[domain] || {};
+    const domain = msgData.domain;
+    const companyDetails = csvData[domain] || {};
 
-    if (!csvDetails) {
+    if (Object.keys(companyDetails).length === 0) {
         console.log(`No CSV data found for domain: ${domain}`);
         return;
     }
 
-    // Generate ID from domain
     const docId = generateIdFromDomain(domain);
-    // Merge data from CSV with Kafka message
-    const mergedData = csvDetails;
+    const mergedData = { ...companyDetails };
 
-    for (const key in data) {
-        if (data[key] !== null) {
-            if (key == 'phone_number' && data[key].length != 0) {
-                mergedData['phoneNumber'] = data[key];
-            } else if (key === 'facebook_url') {
-                mergedData['facebook'] = data[key];
-            } else if (key === 'address' || key === 'website') {
-                mergedData[key] = data[key];
+    for (const key in msgData) {
+        if (msgData[key] !== null) {
+            switch (key) {
+                case 'phone_number':
+                    if (msgData[key].length !== 0) {
+                        mergedData['phoneNumber'] = msgData[key];
+                    }
+                    break;
+                case 'facebook_url':
+                    mergedData['facebook'] = msgData[key];
+                    break;
+                case 'address':
+                case 'website':
+                    mergedData[key] = msgData[key];
+                    break;
             }
         }
     }
 
-    // Check and merge with existing data in Elasticsearch
     await mergeWithExistingData(docId, mergedData);
 }
 
 async function mergeWithExistingData(docId, newData) {
+    const esIndex = config.elasticsearch.companyIndex;
     try {
-        // Try to fetch the existing document from Elasticsearch by its ID
-        const { body: existingDoc } = await esClient.get({
-            index: esIndex,
-            id: docId
-        });
-
-        let existingData = {};
-        if (existingDoc) {
-            existingData = existingDoc._source;
-        }
-        // Merge data - Only update the fields if they are not empty in new data
-        const mergedData = {
-            ...existingData,
-            ...Object.keys(newData).reduce((acc, key) => {
-                // Only include the new value if it's not empty
-                if (newData[key] && newData[key].length > 0) {
-                    acc[key] = newData[key];
-                }
-                return acc;
-            }, {}),
-        };
-
         // Update the document in Elasticsearch
-        await esClient.index({
+        await esClient.update({
             index: esIndex,
             id: docId,
-            body: mergedData
+            body: {
+                doc: newData,
+                doc_as_upsert: true
+            }
         });
 
         console.log(`Document for ${docId} updated in Elasticsearch.`);
     } catch (error) {
-        if (!error.meta.body.found) {
+        if (error.meta && error.meta.statusCode === 404) {
+            console.warn(`Document ${docId} not found, creating new one.`);
             try {
                 await esClient.index({
                     index: esIndex,
                     id: docId,
                     body: newData
                 });
-                console.log(`Document for ${docId} created in Elasticsearch.`);
-            } catch (error) {
-                console.error('Error creating document in Elasticsearch:', error);
+                console.log(`Document ${docId} created.`);
+            } catch (indexError) {
+                console.error('Error creating document in Elasticsearch:', indexError);
             }
         } else {
-            // Handle other errors
             console.error('Error during Elasticsearch operation:', error);
         }
     }
 }
 
-// Function to start Kafka consumer
 async function run() {
     // Load CSV data once before running the consumer
-    await loadData();
+    const csvData = await loadData();
 
     await consumer.connect();
-    await consumer.subscribe({ topic: kafkaTopic, fromBeginning: true });
-
-    console.log(`Subscribed to Kafka topic: ${kafkaTopic}`);
+    await consumer.subscribe({ topic: config.kafka.topic, fromBeginning: true });
+    console.log(`Subscribed to Kafka topic: ${config.kafka.topic}`);
 
     await consumer.run({
         eachMessage: async ({ message }) => {
             try {
-                await processMessage(message);
+                await processMessage(message, csvData);
             } catch (error) {
                 console.error('Error processing message:', error);
             }
