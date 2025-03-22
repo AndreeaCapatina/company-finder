@@ -142,9 +142,10 @@ sh setup_environment.sh
 ```
 
 This script will:
-✅ Start core services (Elasticsearch, Kibana, Kafka, and Zookeeper).
-✅ Wait for Elasticsearch to be ready.
-✅ Run the scripts/setup_elasticsearch.sh script to configure indices.
+
+✅ Start core services (Elasticsearch, Kibana, Kafka, and Zookeeper).<br>
+✅ Wait for Elasticsearch to be ready.<br>
+✅ Run the scripts/setup_elasticsearch.sh script to configure indices.<br>
 ✅ Start the remaining services (contact-scraper, kafka-consumer, company-api).
 
 3. The Company API will be available at:
