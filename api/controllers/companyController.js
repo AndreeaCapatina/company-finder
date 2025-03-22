@@ -1,23 +1,33 @@
 import { findCompany } from '../services/companyServices.js';
+import { ERROR_CODES, ERROR_MESSAGES } from '../errors/company.js';
 
 const getCompanyProfile = async (req, reply) => {
 
     const filters = buildFilters(req.query);
     if (isEmpty(filters)) {
-        reply.status(400).send({ error: 'At least one query parameter is required' });
+        return reply.status(400).send({
+            code: ERROR_CODES.MISSING_PARAMETERS,
+            message: ERROR_MESSAGES.MISSING_PARAMETERS
+        });
     }
     try {
-        const profile = await findCompany(filters);
-        if (!profile) {
-            reply.status(404).send({ message: 'Company profile not found' });
-        } else {
-            reply.send(profile);
+        const companyProfile = await findCompany(filters);
+        if (!companyProfile) {
+            return reply.status(404).send({
+                code: ERROR_CODES.COMPANY_NOT_FOUND,
+                message: ERROR_MESSAGES.COMPANY_NOT_FOUND
+            });
         }
-    } catch (err) {
-        console.log(err);
-        reply.status(500).send({ message: 'Error retrieving the company profile' });
-    }
 
+        reply.send(companyProfile);
+
+    } catch (err) {
+        req.log.error(err);
+        reply.status(500).send({
+            code: ERROR_CODES.INTERNAL_ERROR,
+            message: ERROR_MESSAGES.INTERNAL_ERROR
+        });
+    }
 };
 
 /**
@@ -27,7 +37,6 @@ const getCompanyProfile = async (req, reply) => {
 function buildFilters(query) {
     const {
         name,
-        website,
         phoneNumber,
         facebookURI
     } = query;
@@ -36,10 +45,6 @@ function buildFilters(query) {
 
     if (name) {
         filters.name = name;
-    }
-
-    if (website) {
-        filters.website = website;
     }
 
     if (phoneNumber) {

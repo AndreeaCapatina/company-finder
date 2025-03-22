@@ -1,14 +1,7 @@
-import { Client } from "@elastic/elasticsearch";
-import dotenv from 'dotenv';
+import { esClient } from '../config/elasticsearch.js';
+import { config } from '../config/env.js';
 
-// Load environment variables
-dotenv.config();
-
-const client = new Client({
-    nodes: [process.env.ES_HOST || 'http://localhost:9200']
-});
-
-const companyIndex = process.env.ES_COMPANY_INDEX;
+const companyIndex = config.elasticsearch.companyIndex;
 
 /**
  * 
@@ -44,7 +37,7 @@ async function findCompany(filters) {
     }
 
     try {
-        const result = await client.search({
+        const result = await esClient.search({
             index: companyIndex,
             body: { query }
         });

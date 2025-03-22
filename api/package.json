@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "API for querying company data",
   "type": "module",
-  "main": "app.js",
+  "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
+    "start": "node server/index.js",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "clean": "rm -rf package-lock.json"
@@ -15,6 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "@elastic/elasticsearch": "^8.17.1",
+    "ajv-errors": "^3.0.0",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1"
   },
