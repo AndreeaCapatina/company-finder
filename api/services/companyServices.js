@@ -3,10 +3,11 @@ import { config } from '../config/env.js';
 
 const companyIndex = config.elasticsearch.companyIndex;
 
-/**
- * 
- */
 async function findCompany(filters) {
+    if (!filters || Object.keys(filters).length === 0) {
+        return null;
+    }
+
     const query = {
         bool: {
             must: []
@@ -14,21 +15,22 @@ async function findCompany(filters) {
     };
 
     for (const [field, value] of Object.entries(filters)) {
-        if (value) {
-            if (field === 'name') {
-                const boolShould = {
-                    bool: {
-                        should: [
-                            { match: { commercialName: value } },
-                            { match: { legalName: value } },
-                            { match: { availableNames: value } }
-                        ]
-                    }
-                };
-                query.bool.must.push(boolShould);
-            } else {
-                query.bool.must.push({ match: { [field]: value } });
-            }
+        if (!value) {
+            continue;
+        }
+
+        if (field === 'name') {
+            query.bool.must.push({
+                bool: {
+                    should: [
+                        { match: { commercialName: value } },
+                        { match: { legalName: value } },
+                        { match: { availableNames: value } }
+                    ]
+                }
+            });
+        } else {
+            query.bool.must.push({ match: { [field]: value } });
         }
     }
 
@@ -42,14 +44,14 @@ async function findCompany(filters) {
             body: { query }
         });
 
-        if (result.hits.total.value == 0) {
+        const totalHits = result?.hits?.total?.value ?? 0;
+        if (totalHits == 0) {
             return null;
         }
 
         return result.hits.hits[0]._source;
     } catch (err) {
-        console.error('Error querying Elasticsearch:', err);
-        throw new Error('Unable to face data from Elasticsearch');
+        throw new Error(`Failed to fetch data: ${err.message}`);
     }
 }
 
