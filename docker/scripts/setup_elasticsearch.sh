@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+
 # Default values for ES_HOST if environment variables are not set
 ES_HOST="${ES_HOST:-http://localhost:9200}"
 
@@ -8,6 +10,7 @@ INDEX_NAME="company"
 TEMPLATE_NAME="company"
 COMPONENT_TEMPLATE_NAME="common_settings"
 
+SCRIPTS_DIR="$(pwd)"
 # Path to the index template JSON file
 TEMPLATE_FILE="${TEMPLATE_FILE:-${SCRIPTS_DIR}/index_template.json}"
 

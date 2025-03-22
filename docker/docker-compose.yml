@@ -21,14 +21,7 @@ services:
     ports:
       - "9200:9200" # Expose HTTP port
       - "9300:9300" # Expose internal communication port (for clustering, not needed for single-node)
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s" ]
-      interval: 10s
-      retries: 5
-      start_period: 10s
-      timeout: 5s
     volumes:
-      - ./scripts:/usr/src/app/scripts # Make sure your setup script is available in the container
       - elasticsearch-data:/usr/share/elasticsearch/data # Persist Elasticsearch data
     networks:
       - company_microservices_network
